@@ -1,0 +1,22 @@
+{
+  "name": "ui-ethereum-challenge",
+  "version": "1.0.0",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^2.4.0",
+    "@truffle/hdwallet-provider": "^1.0.29",
+    "eth-gas-reporter": "^0.2.14",
+    "ganache-cli": "^6.7.0",
+    "solc": "^0.5.12",
+    "truffle": "^5.1.9",
+    "truffle-security": "^1.6.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Nichanan Kesonpat",
+  "license": "ISC"
+}
