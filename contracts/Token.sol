@@ -1,7 +1,9 @@
-pragma solidity ^0.5.8;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.0;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Token contract with additional _startTime and _stopTime params
 
@@ -23,7 +25,7 @@ contract Token is ERC20, Ownable {
 
   event TokensIssued(uint indexed amount, address indexed recipient);
   
-  constructor (uint _startTime, uint _stopTime) public ERC20() {
+  constructor (uint _startTime, uint _stopTime) public ERC20("Token", "TKN") {
     // set startTime and stopTime to what the deployer specified
     startTime = _startTime;
     stopTime = _stopTime;

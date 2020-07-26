@@ -1,10 +1,12 @@
-pragma solidity ^0.5.8;
+// SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts/lifecycle/Pausable.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+pragma solidity ^0.6.0;
+
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-/// @title Contribution contract
+/// @title Contribution contract - allows users to donate ETH and receive Tokens in return
 /// @dev Contract implements the emergency stop pattern by inheriting Pausable, allowing the deployer to pause the contribution (and thus token issuance) functionalities
 
 contract Contribution is Pausable, Ownable {
