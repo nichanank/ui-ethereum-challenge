@@ -5,7 +5,7 @@ contract('Token', async (accounts) => {
   let catchRevert = require("./exceptions.js").catchRevert
   
   beforeEach('set up Token contract for each test', async () => {
-    tokenInstance = await Token.new()
+    tokenInstance = await Token.new(111111, 555555)
   })
 
   describe("token setup", async () => {

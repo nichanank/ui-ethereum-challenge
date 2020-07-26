@@ -1,3 +1,4 @@
+const Token = artifacts.require("./contracts/Token.sol")
 const Contribution = artifacts.require("./contracts/Contribution.sol")
 
 contract('Contribution', async (accounts) => {
@@ -7,7 +8,8 @@ contract('Contribution', async (accounts) => {
   let catchRevert = require("./exceptions.js").catchRevert
   
   beforeEach('set up Contribution contract for each test', async () => {
-    contributionInstance = await Contribution.new()
+    tokenInstance = await Token.new(111111, 555555)
+    contributionInstance = await Contribution.new(tokenInstance.address)
   })
 
   describe("contributions accounting and token issuance", async () => {
