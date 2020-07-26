@@ -18,8 +18,16 @@ contract Token is ERC20, Ownable {
 
   address public contributionContract;
 
+  /// @dev allows function to execute only if it was called by the contribution contract
   modifier onlyContributionContract {
-    require(msg.sender == contributionContract, "function can only be called by the contribution contract");
+    require(_msgSender() == contributionContract, "function can only be called by the contribution contract");
+    _;
+  }
+
+  /// @dev allows function to execute only if it was called within the startTime and stopTime
+  modifier onlyWithinStartAndStopTime {
+    require(startTime >= block.timestamp, "start time before block.timestamp");
+    require(stopTime <= block.timestamp, "stop time after block.timestamp");
     _;
   }
 
@@ -40,12 +48,23 @@ contract Token is ERC20, Ownable {
   /// @param recipient of tokens (contributor)
   /// @param amountDonated donated in ETH. This determines how many tokens issued to the contributor
   function issueTokens(address recipient, uint amountDonated) public onlyContributionContract {
-    require(startTime >= block.timestamp, "start time before block.timestamp");
-    require(stopTime <= block.timestamp, "stop time after block.timestamp");
     uint tokensToMint = amountDonated.mul(TOKENS_PER_ETH_DONATED);
     _mint(recipient, tokensToMint);
     emit TokensIssued(tokensToMint, recipient);
+  }
 
+  /// @dev overrides ERC20 transfer function so that tokens can only be transferred between the _startTime and _stopTime
+  function transfer(address recipient, uint256 amount) public override onlyWithinStartAndStopTime returns (bool) {
+    _transfer(_msgSender(), recipient, amount);
+    return true;
+  }
+
+  /// @dev overrides ERC20 transferFrom function so that tokens can only be transferred between the _startTime and _stopTime
+  function transferFrom(address sender, address recipient, uint256 amount) public override onlyWithinStartAndStopTime returns (bool) {
+    _transfer(sender, recipient, amount);
+    decreaseAllowance(_msgSender(), amount);
+    // _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+    return true;
   }
  
 }
