@@ -5,7 +5,7 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title Token contract with additional _startTime and _stopTime params
+/// @title Token contract with additional _startTime and _endTime params
 
 contract Token is ERC20, Ownable {
 
@@ -14,7 +14,7 @@ contract Token is ERC20, Ownable {
   uint TOKENS_PER_ETH_DONATED = 100;
   
   uint public startTime;
-  uint public stopTime;
+  uint public endTime;
 
   address public contributionContract;
 
@@ -24,19 +24,19 @@ contract Token is ERC20, Ownable {
     _;
   }
 
-  /// @dev allows function to execute only if it was called within the startTime and stopTime
-  modifier onlyWithinStartAndStopTime {
+  /// @dev modifier to ensure that a function only executes if it was called within the startTime and endTime
+  modifier onlyWithinStartAndEndTime {
     require(block.timestamp > startTime, "block.timestamp is before startTime");
-    require(block.timestamp < stopTime, "block.timestamp is after stopTime");
+    require(block.timestamp < endTime, "block.timestamp is after endTime");
     _;
   }
 
   event TokensIssued(uint indexed amount, address indexed recipient);
   
-  constructor (uint _startTime, uint _stopTime) public ERC20("Token", "TKN") {
-    // set startTime and stopTime to what the deployer specified
+  constructor (uint _startTime, uint _endTime) public ERC20("Token", "TKN") {
+    // set startTime and endTime to what the deployer specified
     startTime = _startTime;
-    stopTime = _stopTime;
+    endTime = _endTime;
   }
 
   /// @dev allows the owner to set the contribution contract address allowed to issue tokens
@@ -53,14 +53,14 @@ contract Token is ERC20, Ownable {
     emit TokensIssued(tokensToMint, recipient);
   }
 
-  /// @dev overrides ERC20 transfer function so that tokens can only be transferred between the _startTime and _stopTime
-  function transfer(address recipient, uint256 amount) public override onlyWithinStartAndStopTime returns (bool) {
+  /// @dev overrides ERC20 transfer function so that tokens can only be transferred between the _startTime and _endTime
+  function transfer(address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
 
-  /// @dev overrides ERC20 transferFrom function so that tokens can only be transferred between the _startTime and _stopTime
-  function transferFrom(address sender, address recipient, uint256 amount) public override onlyWithinStartAndStopTime returns (bool) {
+  /// @dev overrides ERC20 transferFrom function so that tokens can only be transferred between the _startTime and _endTime
+  function transferFrom(address sender, address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
     _transfer(sender, recipient, amount);
     decreaseAllowance(_msgSender(), amount);
     // _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));

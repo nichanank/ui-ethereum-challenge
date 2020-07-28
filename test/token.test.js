@@ -1,4 +1,4 @@
-const { BN, ether, constants, expectEvent, shouldFail, time } = require('@openzeppelin/test-helpers')
+const { BN, ether, constants, expectEvent, expectRevert, shouldFail, time } = require('@openzeppelin/test-helpers')
 
 const Token = artifacts.require("./contracts/Token.sol")
 const Contribution = artifacts.require("./contracts/Contribution.sol")
@@ -7,12 +7,11 @@ contract('Token', async (accounts) => {
   const owner = accounts[0]
   const user1 = accounts[1]
   const user2 = accounts[2]
-  let catchRevert = require("./exceptions.js").catchRevert
   
   beforeEach('set up Token contract for each test', async () => {
     testStartTime = (await time.latest()).add(time.duration.days(1))
-    testStopTime = testStartTime.add(time.duration.weeks(1))
-    tokenInstance = await Token.new(testStartTime, testStopTime)
+    testEndTime = testStartTime.add(time.duration.weeks(1))
+    tokenInstance = await Token.new(testStartTime, testEndTime)
     contributionInstance = await Contribution.new(tokenInstance.address)
     await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
   })
@@ -28,11 +27,11 @@ contract('Token', async (accounts) => {
       assert.equal(callSymbol, symbol)
     })
 
-    it('should accurately report the owner-defined startTime and stopTime', async () => {
+    it('should accurately report the owner-defined startTime and endTime', async () => {
       callStart = await tokenInstance.startTime()
-      callStop = await tokenInstance.stopTime()
+      callStop = await tokenInstance.endTime()
       assert.equal(callStart.toNumber(), testStartTime)
-      assert.equal(callStop.toNumber(), testStopTime)
+      assert.equal(callStop.toNumber(), testEndTime)
     })
 
   })
@@ -47,21 +46,21 @@ contract('Token', async (accounts) => {
     
     it('should not let users transfer tokens before the startTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
-      await catchRevert(tokenInstance.transfer(user2, 20, {from: user1}))
+      await expectRevert(tokenInstance.transfer(user2, 20, {from: user1}), 'block.timestamp is before startTime')
     })
 
-    it('should let users transfer tokens after the startTime, before the stopTime', async () => {
+    it('should let users transfer tokens after the startTime, before the endTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
       await time.increase(time.duration.days(3))
       await time.advanceBlock()
       await tokenInstance.transfer(user2, 20, {from: user1})
     })
 
-    it('should not users transfer tokens after the stopTime', async () => {
+    it('should not users transfer tokens after the endTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
       await time.increase(time.duration.weeks(3))
       await time.advanceBlock()
-      await catchRevert(tokenInstance.transfer(user2, 20, {from: user1}))
+      await expectRevert(tokenInstance.transfer(user2, 20, {from: user1}), 'block.timestamp is after endTime')
     })
   
   })
