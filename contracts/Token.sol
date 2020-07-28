@@ -59,11 +59,18 @@ contract Token is ERC20, Ownable {
   }
 
   /// @dev overrides ERC20 transfer function so that tokens can only be transferred between the _startTime and _endTime
+  /// @param recipient of the tokens
+  /// @param amount to transfer
+  /// @return true if the transfer is successful
   function transfer(address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
     super.transfer(recipient, amount);
   }
 
   /// @dev overrides ERC20 transferFrom function so that tokens can only be transferred between the _startTime and _endTime
+  /// @param sender address that the tokens 'belongs' to
+  /// @param recipient of the tokens
+  /// @param amount to transfer
+  /// @return true if the transfer is successful
   function transferFrom(address sender, address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
     super.transferFrom(sender, recipient, amount);
   }

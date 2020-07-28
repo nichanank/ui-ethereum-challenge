@@ -15,7 +15,8 @@ contract Contribution is Pausable, Ownable {
     
     using SafeMath for uint;
 
-    Token tokenContract;
+    /// @notice ERC20 tokens that are issued to a user when they make a donation
+    Token public tokenContract;
 
     /// @dev maps addresses to amount donated
     mapping (address => uint) private _contributions;
