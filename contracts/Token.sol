@@ -22,6 +22,9 @@ contract Token is ERC20, Ownable {
   /// @notice address of the contract that is allowed to issue new Tokens in response to a user contribution
   address public contributionContract;
 
+  /// @dev emits when tokens are minted and issued to a user
+  event TokensIssued(uint indexed amount, address indexed recipient);
+
   /// @dev allows function to execute only if it was called by the contribution contract
   modifier onlyContributionContract {
     require(_msgSender() == contributionContract, "function can only be called by the contribution contract");
@@ -34,9 +37,6 @@ contract Token is ERC20, Ownable {
     require(block.timestamp < endTime, "block.timestamp is after endTime");
     _;
   }
-
-  /// @dev emits when tokens are minted and issued to a user
-  event TokensIssued(uint indexed amount, address indexed recipient);
   
   constructor (uint _startTime, uint _endTime) public ERC20("Token", "TKN") {
     // set startTime and endTime to what the deployer specified
@@ -60,16 +60,12 @@ contract Token is ERC20, Ownable {
 
   /// @dev overrides ERC20 transfer function so that tokens can only be transferred between the _startTime and _endTime
   function transfer(address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
-    _transfer(_msgSender(), recipient, amount);
-    return true;
+    super.transfer(recipient, amount);
   }
 
   /// @dev overrides ERC20 transferFrom function so that tokens can only be transferred between the _startTime and _endTime
   function transferFrom(address sender, address recipient, uint256 amount) public override onlyWithinStartAndEndTime returns (bool) {
-    _transfer(sender, recipient, amount);
-    decreaseAllowance(_msgSender(), amount);
-    // _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
-    return true;
+    super.transferFrom(sender, recipient, amount);
   }
  
 }
