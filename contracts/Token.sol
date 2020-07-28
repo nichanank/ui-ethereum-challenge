@@ -11,6 +11,7 @@ contract Token is ERC20, Ownable {
 
   using SafeMath for uint;
 
+  /// @dev hypothetical number of tokens to issue per donated amount in ETH
   uint TOKENS_PER_ETH_DONATED = 100;
   
   uint public startTime;
@@ -31,6 +32,7 @@ contract Token is ERC20, Ownable {
     _;
   }
 
+  /// @dev emits when tokens are minted and issued to a user
   event TokensIssued(uint indexed amount, address indexed recipient);
   
   constructor (uint _startTime, uint _endTime) public ERC20("Token", "TKN") {
@@ -39,7 +41,7 @@ contract Token is ERC20, Ownable {
     endTime = _endTime;
   }
 
-  /// @dev allows the owner to set the contribution contract address allowed to issue tokens
+  /// @dev allows the owner to set the contribution contract address allowed to issue tokens. Owner must "approve" the Contribution contract before Tokens can be minted in response to a donation.
   function setContributionContract(address addr) external onlyOwner {
     contributionContract = addr;
   }
