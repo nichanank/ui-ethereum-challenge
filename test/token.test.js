@@ -1,4 +1,4 @@
-const { BN, ether, constants, expectEvent, expectRevert, shouldFail, time } = require('@openzeppelin/test-helpers')
+const { BN, ether, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers')
 
 const Token = artifacts.require("./contracts/Token.sol")
 const Contribution = artifacts.require("./contracts/Contribution.sol")
@@ -7,6 +7,9 @@ contract('Token', async (accounts) => {
   const owner = accounts[0]
   const user1 = accounts[1]
   const user2 = accounts[2]
+
+  const testAmount = ether('2')
+  const TOKENS_PER_ETH_DONATED = new BN('100')
   
   beforeEach('set up Token contract for each test', async () => {
     testStartTime = (await time.latest()).add(time.duration.days(1))
@@ -16,7 +19,7 @@ contract('Token', async (accounts) => {
     await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
   })
 
-  describe("token setup", async () => {
+  describe("contract setup", async () => {
   
     it('should have the correct name and symbol', async () => {
       let name = 'Token'
@@ -39,10 +42,13 @@ contract('Token', async (accounts) => {
   describe("token issuance", async () => {
 
     it('should emit an event when tokens have been issued', async () => {
-      // let { transactionHash } = await contributionInstance.contribute({from: user1, value: 100})
-      // console.log(transactionHash)
-      // expectEvent.inTransaction(transactionHash, tokenInstance, 'TokensIssued', { amount: new BN(10000), recipient: user1 })
+      let { tx } = await contributionInstance.contribute({from: user1, value: testAmount})
+      await expectEvent.inTransaction(tx, tokenInstance, 'TokensIssued', { amount: testAmount.mul(TOKENS_PER_ETH_DONATED), recipient: user1 })
     })
+  
+  })
+
+  describe("time-dependent transfers", async () => {
     
     it('should not let users transfer tokens before the startTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
@@ -62,7 +68,7 @@ contract('Token', async (accounts) => {
       await time.advanceBlock()
       await expectRevert(tokenInstance.transfer(user2, 20, {from: user1}), 'block.timestamp is after endTime')
     })
-  
+
   })
 
 })

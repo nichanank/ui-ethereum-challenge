@@ -1,4 +1,5 @@
-const { BN, ether, constants, expectEvent, expectRevert, shouldFail, time } = require('@openzeppelin/test-helpers')
+const { BN, ether, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers')
+// const { BN } = require('@openzeppelin/test-helpers/src/setup')
 
 const Token = artifacts.require("./contracts/Token.sol")
 const Contribution = artifacts.require("./contracts/Contribution.sol")
@@ -8,40 +9,73 @@ contract('Contribution', async (accounts) => {
   const user1 = accounts[1]
   const user2 = accounts[2]
 
-  const testAmount = 100
+  const testAmount = ether('2')
   
   beforeEach('set up Contribution contract for each test', async () => {
+    // hypothetical startTime is one day from now, endTime one week from startTime
     testStartTime = (await time.latest()).add(time.duration.days(1))
     testEndTime = testStartTime.add(time.duration.weeks(1))
+
+    // deploy new contracts for each test case
     tokenInstance = await Token.new(testStartTime, testEndTime)
     contributionInstance = await Contribution.new(tokenInstance.address)
-    await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+  })
+
+  describe("contract setup", async () => {
+
+    it('should revert if contributions are made before the Contribution contract has been approved on the Token contract to mint/issue new tokens', async () => {
+      await expectRevert(contributionInstance.contribute({from: user1, value: testAmount}), 'function can only be called by the contribution contract')
+    })
+  
   })
 
   describe("contributions accounting and token issuance", async () => {
   
-    it('should accept contributions and issue tokens when contract is not paused', async () => {
-      await contributionInstance.contribute({from: owner, value: 100})
+    it('should accept contributions and issue tokens when Contribution contract has been apporved on the Token contract', async () => {
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+      await contributionInstance.contribute({from: user1, value: testAmount})
     })
 
     it('should emit an event when a contribution has been made', async () => {
-      let receipt = await contributionInstance.contribute({from: user1, value: 100})
-      expectEvent(receipt, 'ContributionMade', { contributor: user1, amount: new BN(100) })
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+
+      let receipt = await contributionInstance.contribute({from: user1, value: testAmount})
+      expectEvent(receipt, 'ContributionMade', { contributor: user1, amount: testAmount })
     })
 
-    it('should not accept contributions and issue tokens when contract is paused', async () => {
+    it('should accurately return how much ETH a user has contributed', async () => {
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+      
+      await contributionInstance.contribute({from: user1, value: testAmount})
+      var callAmount = await contributionInstance.amountContributed(user1, {from: owner})
+      assert.equal(0, testAmount.cmp(callAmount))
+
+      await contributionInstance.contribute({from: user1, value: testAmount})
+      callAmount = await contributionInstance.amountContributed(user1, {from: owner})
+      assert.equal(0, testAmount.mul(new BN(2)).cmp(callAmount))
+    })
+
+    it('should revert if the user calls `contribute` without attaching any ETH', async () => {
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+
+      await expectRevert(contributionInstance.contribute({from: owner}), 'Insufficient contribution: Amount should be more than 0')
+      await expectRevert(contributionInstance.contribute({from: user1}), 'Insufficient contribution: Amount should be more than 0')
+    })
+
+    it('should not accept contributions or issue tokens when contract is paused', async () => {
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+
       await contributionInstance.pause({from: owner})
       await expectRevert(contributionInstance.contribute({from: owner, value: 100}), 'Pausable: paused')
     })
 
-    it('should accurately return how much ETH a user has contributed', async () => {
+    it('should accept contributions when the contract is unpaused (emergency stop)', async () => {
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+
+      await contributionInstance.pause({from: owner})
+      await expectRevert(contributionInstance.contribute({from: owner, value: testAmount}), 'Pausable: paused')
+      await contributionInstance.unpause({from: owner})
       await contributionInstance.contribute({from: user1, value: testAmount})
-      let callAmount = await contributionInstance.amountContributed(user1, {from: owner})
-      assert.equal(callAmount.toNumber(), testAmount)
-    })
-
-    it('should not accept contributions when the contract is paused', async () => {
-
     })
 
   })
@@ -49,8 +83,10 @@ contract('Contribution', async (accounts) => {
   describe("fund withdrawal", async () => {
 
     it('should allow owner to withdraw a specified amount', async () => {
-      await contributionInstance.contribute({from: user1, value: 100})
-      await contributionInstance.withdraw(100, {from: owner})
+      await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
+
+      await contributionInstance.contribute({from: user1, value: testAmount})
+      await contributionInstance.withdraw(testAmount, {from: owner})
     })
 
     it('should allow owner to withdraw the total balance of the contract', async () => {
