@@ -5,7 +5,8 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title Token contract with additional _startTime and _endTime params
+/// @title ERC20 Token contract with custom _startTime and _endTime requirements for token transfers
+/// @author Nichanan Kesonpat (nich@nichanank.com)
 
 contract Token is ERC20, Ownable {
 
@@ -14,9 +15,11 @@ contract Token is ERC20, Ownable {
   /// @dev hypothetical number of tokens to issue per donated amount in ETH
   uint TOKENS_PER_ETH_DONATED = 100;
   
+  /// @notice startTime and endTime constraints within which tokens can be transferred. In other words, token transfers cannot occur before the startTime or after the endTime
   uint public startTime;
   uint public endTime;
 
+  /// @notice address of the contract that is allowed to issue new Tokens in response to a user contribution
   address public contributionContract;
 
   /// @dev allows function to execute only if it was called by the contribution contract
