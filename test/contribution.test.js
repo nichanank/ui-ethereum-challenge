@@ -1,5 +1,4 @@
 const { BN, ether, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers')
-// const { BN } = require('@openzeppelin/test-helpers/src/setup')
 
 const Token = artifacts.require("./contracts/Token.sol")
 const Contribution = artifacts.require("./contracts/Contribution.sol")
@@ -7,7 +6,6 @@ const Contribution = artifacts.require("./contracts/Contribution.sol")
 contract('Contribution', async (accounts) => {
   const owner = accounts[0]
   const user1 = accounts[1]
-  const user2 = accounts[2]
 
   const testAmount = ether('2')
   

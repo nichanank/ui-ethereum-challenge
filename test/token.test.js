@@ -48,7 +48,7 @@ contract('Token', async (accounts) => {
   
   })
 
-  describe("time-dependent transfers", async () => {
+  describe("time-dependent transfers (transfer)", async () => {
     
     it('should not let users transfer tokens before the startTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
@@ -57,16 +57,54 @@ contract('Token', async (accounts) => {
 
     it('should let users transfer tokens after the startTime, before the endTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
+      
+      // increase to after startTime, before endTime
       await time.increase(time.duration.days(3))
       await time.advanceBlock()
+      
       await tokenInstance.transfer(user2, 20, {from: user1})
     })
 
     it('should not users transfer tokens after the endTime', async () => {
       await contributionInstance.contribute({from: user1, value: 100})
+      
+      // increase to after endTime
       await time.increase(time.duration.weeks(3))
       await time.advanceBlock()
+
       await expectRevert(tokenInstance.transfer(user2, 20, {from: user1}), 'block.timestamp is after endTime')
+    })
+
+  })
+
+  describe("time-dependent transfers (transferFrom)", async () => {
+    
+    it('should not let users transferFrom tokens before the startTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await tokenInstance.approve(owner, 20, {from: user1})
+      await expectRevert(tokenInstance.transferFrom(user1, user2, 20, {from: owner}), 'block.timestamp is before startTime')
+    })
+
+    it('should let users transferFrom tokens after the startTime, before the endTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await tokenInstance.approve(owner, 20, {from: user1})
+      
+      // increase to after startTime, before endTime
+      await time.increase(time.duration.days(3))
+      await time.advanceBlock()
+      
+      await tokenInstance.transferFrom(user1, user2, 20, {from: owner})
+    })
+
+    it('should not users transferFrom tokens after the endTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await tokenInstance.approve(owner, 20, {from: user1})
+      
+      // increase to after endTime
+      await time.increase(time.duration.weeks(3))
+      await time.advanceBlock()
+
+      await expectRevert(tokenInstance.transferFrom(user1, user2, 20, {from: owner}), 'block.timestamp is after endTime')
     })
 
   })
