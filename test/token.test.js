@@ -1,41 +1,67 @@
+const { BN, ether, constants, expectEvent, shouldFail, time } = require('@openzeppelin/test-helpers')
+
 const Token = artifacts.require("./contracts/Token.sol")
+const Contribution = artifacts.require("./contracts/Contribution.sol")
 
 contract('Token', async (accounts) => {
-  const user1 = accounts[0]
+  const owner = accounts[0]
+  const user1 = accounts[1]
+  const user2 = accounts[2]
   let catchRevert = require("./exceptions.js").catchRevert
   
   beforeEach('set up Token contract for each test', async () => {
-    tokenInstance = await Token.new(111111, 555555)
+    testStartTime = (await time.latest()).add(time.duration.days(1))
+    testStopTime = testStartTime.add(time.duration.weeks(1))
+    tokenInstance = await Token.new(testStartTime, testStopTime)
+    contributionInstance = await Contribution.new(tokenInstance.address)
+    await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
   })
 
   describe("token setup", async () => {
   
     it('should have the correct name and symbol', async () => {
-    
+      let name = 'Token'
+      let symbol = 'TKN'
+      callName = await tokenInstance.name()
+      callSymbol = await tokenInstance.symbol()
+      assert.equal(callName, name)
+      assert.equal(callSymbol, symbol)
     })
 
     it('should accurately report the owner-defined startTime and stopTime', async () => {
-    
+      callStart = await tokenInstance.startTime()
+      callStop = await tokenInstance.stopTime()
+      assert.equal(callStart.toNumber(), testStartTime)
+      assert.equal(callStop.toNumber(), testStopTime)
     })
 
   })
 
   describe("token issuance", async () => {
 
-    it('should issue tokens if the current time is between startTime and stopTime', async () => {
-      
-    })
-
     it('should emit an event when tokens have been issued', async () => {
-      
+      // let { transactionHash } = await contributionInstance.contribute({from: user1, value: 100})
+      // console.log(transactionHash)
+      // expectEvent.inTransaction(transactionHash, tokenInstance, 'TokensIssued', { amount: new BN(10000), recipient: user1 })
     })
     
-    it('should not issue tokens before the startTime', async () => {
-      
+    it('should not let users transfer tokens before the startTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await catchRevert(tokenInstance.transfer(user2, 20, {from: user1}))
     })
 
-    it('should not issue tokens after the stopTime', async () => {
-      
+    it('should let users transfer tokens after the startTime, before the stopTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await time.increase(time.duration.days(3))
+      await time.advanceBlock()
+      await tokenInstance.transfer(user2, 20, {from: user1})
+    })
+
+    it('should not users transfer tokens after the stopTime', async () => {
+      await contributionInstance.contribute({from: user1, value: 100})
+      await time.increase(time.duration.weeks(3))
+      await time.advanceBlock()
+      await catchRevert(tokenInstance.transfer(user2, 20, {from: user1}))
     })
   
   })

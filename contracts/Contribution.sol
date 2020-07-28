@@ -51,6 +51,14 @@ contract Contribution is Pausable, Ownable {
       return address(this).balance;
     }
 
+    function pause() external onlyOwner {
+      _pause();
+    }
+
+    function unpause() external onlyOwner {
+      _unpause();
+    }
+
     /// @dev allows owner of contract to withdraw a stated amount from contract
     /// @param _amount to withdraw
     function withdraw(uint _amount) external onlyOwner {

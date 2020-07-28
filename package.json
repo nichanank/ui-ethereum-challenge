@@ -18,5 +18,8 @@
     "test": "mocha"
   },
   "author": "Nichanan Kesonpat",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.6"
+  }
 }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.6.0;
 
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Token contract with additional _startTime and _stopTime params
@@ -26,8 +26,8 @@ contract Token is ERC20, Ownable {
 
   /// @dev allows function to execute only if it was called within the startTime and stopTime
   modifier onlyWithinStartAndStopTime {
-    require(startTime >= block.timestamp, "start time before block.timestamp");
-    require(stopTime <= block.timestamp, "stop time after block.timestamp");
+    require(block.timestamp > startTime, "block.timestamp is before startTime");
+    require(block.timestamp < stopTime, "block.timestamp is after stopTime");
     _;
   }
 
