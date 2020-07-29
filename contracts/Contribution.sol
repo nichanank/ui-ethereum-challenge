@@ -9,7 +9,7 @@ import "./Token.sol";
 
 /// @title Contribution contract that allows users to donate ETH and receive Tokens in return
 /// @author Nichanan Kesonpat (nich@nichanank.com)
-/// @dev Contract implements the emergency stop pattern by inheriting Pausable, allowing the deployer to pause the contribution (and thus token issuance) functionalities. Contract allows users to contribute ETH more than once, issuing an amount of Tokens proportional to the amount donated each time
+/// @dev Contract implements the emergency stop pattern by inheriting Pausable, allowing the deployer to pause the contribution (and thus token issuance) functionality. Contract allows users to contribute ETH more than once, issuing an amount of Tokens proportional to the amount donated each time.
 
 contract Contribution is Pausable, Ownable {
     
@@ -31,7 +31,7 @@ contract Contribution is Pausable, Ownable {
     }
 
     /// @notice users can call this function to make ETH donations and receive Tokens in return
-    /// @dev accepts ETH as a contribution, stores the contribution amount by the sender, and issues Tokens to the sender
+    /// @dev accepts ETH as a contribution, updates total contribution amount by the sender, and issues Tokens to the sender
     function contribute() public payable whenNotPaused {
       require(msg.value > 0, "Insufficient contribution: Amount should be more than 0");
 
@@ -46,7 +46,7 @@ contract Contribution is Pausable, Ownable {
     }
 
     /// @notice check the total contribution amount by a given address
-    /// @dev accepts a wallet address and return the amount of ETH that a wallet address has contributed
+    /// @dev accepts a wallet address and return amount that a wallet address has contributed
     /// @param addr to check total amount contributed
     /// @return total amount contributed by specified address
     function amountContributed(address addr) public view returns (uint) {
