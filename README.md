@@ -21,6 +21,7 @@ ETH they’ve donated
 * Owner must call `setContributionContract` from the `Token` contract before the Contribution contract is "allowed" to mint and issue new tokens. This way, there is a separation of concerns between Token logic and Contribution logic. Should there be a bug in the Contribution contract, the owner can `pause` contributions so no more money comes in and set a new Contribution contract without having to redeploy the Token contract.
 * To **prevent integer underflow/overflow**, both `Contribution` and `Token` utilizes the `SafeMath` library to perform arithmatics. `Contribution` uses the library to update the `amountContributed` by a user should they make additional contributions. `Token` uses the library to calculate the number of tokens to issue to a user relative to their contribution amount (this multipler is a hypothetical constant)
 * Both `transfer` and `transferFrom` functions of the ERC20 are restricted by `startTime` and `endTime`. Token owners can `approve` tokens outside this window, but `transferFrom` will not work
+* Time constraints are only implemented on the `transfer` and `transferFrom` functions. This means that users can still contribute ETH to the Contribution contract and be issued new tokens outside of the `startTime` and `endTime` window because the `contribution` function calls `mint` and not `transfer`
 
 ### External tools/libraries used
 * Truffle suite for contract migration setup and testing
