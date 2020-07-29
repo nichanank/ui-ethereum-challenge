@@ -37,6 +37,10 @@ contract('Token', async (accounts) => {
       assert.equal(callStop.toNumber(), testEndTime)
     })
 
+    it('should revert when someone other than the owner tries to set the Contribution contract', async () => {
+      await expectRevert(tokenInstance.setContributionContract(contributionInstance.address, {from: user1}), 'Ownable: caller is not the owner')
+    })
+
   })
 
   describe("token issuance", async () => {

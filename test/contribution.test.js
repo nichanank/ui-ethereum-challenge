@@ -10,7 +10,7 @@ contract('Contribution', async (accounts) => {
   const testAmount = ether('2')
   
   beforeEach('set up Contribution contract for each test', async () => {
-    // hypothetical startTime is one day from now, endTime one week from startTime
+    // hypothetical startTime is one day from latest block, endTime one week from startTime
     testStartTime = (await time.latest()).add(time.duration.days(1))
     testEndTime = testStartTime.add(time.duration.weeks(1))
 
@@ -21,7 +21,7 @@ contract('Contribution', async (accounts) => {
 
   describe("contract setup", async () => {
 
-    it('should revert if contributions are made before the Contribution contract has been approved on the Token contract to mint/issue new tokens', async () => {
+    it('should revert if contributions are made before the Contribution contract has been set ("approved" to issue tokens) on the Token contract', async () => {
       await expectRevert(contributionInstance.contribute({from: user1, value: testAmount}), 'function can only be called by the contribution contract')
     })
   
@@ -46,10 +46,14 @@ contract('Contribution', async (accounts) => {
       
       await contributionInstance.contribute({from: user1, value: testAmount})
       var callAmount = await contributionInstance.amountContributed(user1, {from: owner})
+      
+      // this tests for equality in BigNumber objects: a.cmp(b) = 0 means a == b
       assert.equal(0, testAmount.cmp(callAmount))
 
       await contributionInstance.contribute({from: user1, value: testAmount})
       callAmount = await contributionInstance.amountContributed(user1, {from: owner})
+      
+      // callAmount should equal testAmount * 2 since the smart contract records the total amount contributed by the user
       assert.equal(0, testAmount.mul(new BN(2)).cmp(callAmount))
     })
 
@@ -84,11 +88,13 @@ contract('Contribution', async (accounts) => {
       await tokenInstance.setContributionContract(contributionInstance.address, {from: owner})
 
       await contributionInstance.contribute({from: user1, value: testAmount})
-      await contributionInstance.withdraw(testAmount, {from: owner})
+      let receipt = await contributionInstance.withdraw(testAmount, {from: owner})
+      expectEvent(receipt, 'FundWithdrawal', { amount: testAmount })
     })
 
     it('should allow owner to withdraw the total balance of the contract', async () => {
-      await contributionInstance.withdrawAll({from: owner})
+      let receipt = await contributionInstance.withdrawAll({from: owner})
+      expectEvent(receipt, 'FundWithdrawal')
     })
 
     it('should revert when owner tries to withdraw a higher amount than the contract balance', async () => {
